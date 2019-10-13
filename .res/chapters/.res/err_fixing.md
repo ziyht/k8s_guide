@@ -1,4 +1,4 @@
-1. apply flannel 报错
+## 1. apply flannel 报错
 
 ```
 Error from server (Forbidden): error when retrieving current configuration of:
@@ -67,4 +67,38 @@ rm -f /etc/cni/net.d/*
 
 # 重置 iptables
 iptables -F && iptables -t nat -F && iptables -t mangle -F && iptables -X
+```
+
+## 2. 应用 flannel 网络时 出现 Init:ImagePullBackOff
+```
+[root@localhost k8s]# kubectl get all -n kube-system
+NAME                                                READY   STATUS                  RESTARTS   AGE
+pod/coredns-5644d7b6d9-xn557                        0/1     Pending                 0          15m
+pod/coredns-5644d7b6d9-xskpk                        0/1     Pending                 0          15m
+pod/etcd-localhost.localdomain                      1/1     Running                 0          14m
+pod/kube-apiserver-localhost.localdomain            1/1     Running                 0          14m
+pod/kube-controller-manager-localhost.localdomain   1/1     Running                 0          14m
+pod/kube-flannel-ds-amd64-zk65p                     0/1     Init:ImagePullBackOff   0          52s
+pod/kube-proxy-lf4cq                                1/1     Running                 0          15m
+pod/kube-scheduler-localhost.localdomain            1/1     Running                 0          14m
+```
+
+出现此问题的原因是 https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml 中的镜像地址无法拉取，这里可以使用docker拉取其它地址的镜像，再修改tag:  
+> 注意： 拉取镜像的操作在子节点上也要执行
+```
+# 方案1: 直接拉取
+docker pull lizhenliang/flannel:v0.11.0-amd64
+docker tag lizhenliang/flannel:v0.11.0-amd64 quay.io/coreos/flannel:v0.11.0-amd64
+
+# 方案2：主服务器无法访问时，先下载，再导入
+docker image save lizhenliang/flannel:v0.11.0-amd64 >flannelv0.11.0-amd64.tar
+docker load < flannelv0.11.0-amd64.tar
+docker tag lizhenliang/flannel:v0.11.0-amd64 quay.io/coreos/flannel:v0.11.0-amd64
+```
+
+然后重新应用 flannel 网络
+```
+wget https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+kubectl delete -f kube-flannel.yml
+kubectl apply  -f kube-flannel.yml
 ```

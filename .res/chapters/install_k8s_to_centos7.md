@@ -27,6 +27,11 @@ cat <<EOF >>/etc/hosts
 EOF
 ```
 
+`修改 hostname，和 hosts 文件内容保持一致`
+```
+hostnamectl set-hostname master
+```
+
 `关闭防火墙、selinux和swap`
 ```
 systemctl disable --now firewalld
@@ -89,7 +94,7 @@ sudo yum-config-manager \
 
 `安装docker`
 ```
-sudo yum install docker-ce docker-ce-cli containerd.io
+sudo yum install -y docker-ce docker-ce-cli containerd.io
 ```
 > 这里可以先查看有哪些支持的版本，然后安装指定的版本
 > ```
@@ -143,9 +148,14 @@ gpgkey=http://mirrors.aliyun.com/kubernetes/yum/doc/yum-key.gpg
 EOF
 ```
 
-`安装kubelet kubeadm kubectl`
+`安装 kubelet kubeadm kubectl`
 ```
 yum install -y kubelet kubeadm kubectl --disableexcludes=kubernetes
+```
+
+`设置 kubelet 自启动(当前不要启动)`
+```
+systemctl enable kubelet
 ```
 
 ## step 4: 拉取 k8s 基本服务镜像（master）
@@ -282,7 +292,7 @@ docker rmi mirrorgooglecontainers/kube-proxy-amd64:v1.16.1
 docker rmi mirrorgooglecontainers/pause:3.1
 ```
 
-## step 6: 初始化 master
+## step 6: 创建集群
 
 ```
 # 初始化Master（Master需要至少2核）此处会各种报错,异常...成功与否就在此
@@ -375,17 +385,16 @@ sudo chown $(id -u):$(id -g) $HOME/.kube/config
 # 应用flannel网络
 kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
 ```
+## step 7: 设置集群
+
+`将Master作为工作节点（如有必要）`
+```
+kubectl taint nodes --all node-role.kubernetes.io/master-
+```
+> 利用该方法，我们可以不使用minikube而创建一个单节点的K8S集群
 
 `子节点加入master`
 ```
-# 先从 master 端 复制配置
-mkdir -p $HOME/.kube
-sudo scp master:/etc/kubernetes/admin.conf $HOME/.kube/config  # 复制master节点的配置
-sudo chown $(id -u):$(id -g) $HOME/.kube/config
-
-# 把 kubelet 设置为自启动（注意这里不要启动 kubelet）
-systemctl enable kubelet
-
 # 运行 master 端 初始化时的 node 节点 join 命令
 kubeadm join 192.168.193.130:6443 --token 8tju9u.lctq826mmtpyltkc \
     --discovery-token-ca-cert-hash sha256:c0bb0601d3ee49278190653197999a7d42b076948a45e5a147ed300bd729726d
@@ -408,16 +417,6 @@ kubeadm join 192.168.193.130:6443 --token 8tju9u.lctq826mmtpyltkc \
 > 
 > Run 'kubectl get nodes' on the control-plane to see this node join the cluster.
 > ```
-
-
-如果出现相关错误，则移除相关文件即可：
-```
-[preflight] Running pre-flight checks
-	[WARNING SystemVerification]: this Docker version is not on the list of validated versions: 19.03.3. Latest validated version: 18.09
-error execution phase preflight: [preflight] Some fatal errors occurred:
-	[ERROR FileAvailable--etc-kubernetes-kubelet.conf]: /etc/kubernetes/kubelet.conf already exists
-	[ERROR FileAvailable--etc-kubernetes-pki-ca.crt]: /etc/kubernetes/pki/ca.crt already exists
-```
 
 ## step 7: 验证服务
 
