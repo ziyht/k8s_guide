@@ -1,9 +1,23 @@
+# 在 centos7 上部署 k8s集群
+
+## 目录
+
+* [step1:规划](#step1:规划)
+* [step2:配置节点](#step2:配置节点)
+* [step3:安装docker](#step3:安装docker)
+* [step4:安装k8s管理工具](#step4:安装k8s管理工具)
+* [step5:拉取k8s服务镜像](#step5:拉取k8s服务镜像)
+* [step6:创建k8s集群](#step6:创建k8s集群)
+* [step7:应用flannel网络](#step7:应用flannel网络)
+* [step8:子节点加入集群](#step8:子节点加入集群)
+* [step9:配置集群](#step9:配置集群)
+
 ## 前置要求
 
 节点数 : >= 2  
 节点核数 : >= 2
 
-## step 1: 规划
+## [step1:规划](#目录)
 
 |IP         |角色    |Hostname| OS       |
 |--         |--      |--      |--       |
@@ -11,7 +25,7 @@
 |192.168.0.2|worker  |node1   | centos7 |
 |192.168.0.3|worker  |node2   | centos7 |
 
-## step 2: 基本配置
+## [step2:配置节点](#目录)
 
 > 此步骤需要在所有节点上执行  
 > 注：ip地址请自行修正，后续的步骤由于测试的原因 ip 地址可能匹配不上
@@ -56,7 +70,7 @@ EOF
 sysctl --system   # 更新所有配置
 ```
 
-## step 3: 安装 docker
+## [step3:安装docker](#目录)
 
 > **此步骤需要在所有节点上执行**
 
@@ -131,7 +145,8 @@ EOF
 systemctl restart docker  # 重启使配置生效
 ```
 
-## step 3: 安装 kubelet kubeadm kubectl
+## [step4:安装k8s管理工具](#目录) 
+> 本步骤安装 kubelet kubeadm kubectl  
 > **此步骤需要在所有节点上执行**
 
 `添加阿里云yum源`
@@ -158,7 +173,7 @@ yum install -y kubelet kubeadm kubectl --disableexcludes=kubernetes
 systemctl enable kubelet
 ```
 
-## step 4: 拉取 k8s 基本服务镜像（master）
+## [step5:拉取k8s服务镜像](#目录)
 > 我们使用docker运行 k8s 服务，所以需要先下载所有必要的 docker 镜像
 > 如果可以科学上网，可以使用如下命令一步到位：
 > ```
@@ -184,45 +199,17 @@ kubeadm config images list
 >k8s.gcr.io/coredns:1.6.2
 >```
 
-```
-# 手动拉取镜像（根据实际情况做版本号校正）
-docker pull mirrorgooglecontainers/kube-apiserver-amd64:v1.16.1
-docker pull mirrorgooglecontainers/kube-controller-manager-amd64:v1.16.1
-docker pull mirrorgooglecontainers/kube-scheduler-amd64:v1.16.1
-docker pull mirrorgooglecontainers/kube-proxy-amd64:v1.16.1
-docker pull mirrorgooglecontainers/pause:3.1
-docker pull mirrorgooglecontainers/etcd-amd64:3.3.15-0
-docker pull coredns/coredns:1.6.2
-```
-
-```
-# 更改镜像tag
-docker tag docker.io/mirrorgooglecontainers/kube-apiserver-amd64:v1.16.1          k8s.gcr.io/kube-apiserver:v1.16.1
-docker tag docker.io/mirrorgooglecontainers/kube-controller-manager-amd64:v1.16.1 k8s.gcr.io/kube-controller-manager:v1.16.1
-docker tag docker.io/mirrorgooglecontainers/kube-scheduler-amd64:v1.16.1          k8s.gcr.io/kube-scheduler:v1.16.1
-docker tag docker.io/mirrorgooglecontainers/kube-proxy-amd64:v1.16.1              k8s.gcr.io/kube-proxy:v1.16.1
-docker tag docker.io/mirrorgooglecontainers/pause:3.1                             k8s.gcr.io/pause:3.1
-docker tag docker.io/mirrorgooglecontainers/etcd-amd64:3.3.15-0                   k8s.gcr.io/etcd:3.3.15-0
-docker tag docker.io/coredns/coredns:1.6.2                                        k8s.gcr.io/coredns:1.6.2
-```
-
-```
-# 删除原来的镜像
-docker rmi mirrorgooglecontainers/kube-apiserver-amd64:v1.16.1
-docker rmi mirrorgooglecontainers/kube-controller-manager-amd64:v1.16.1
-docker rmi mirrorgooglecontainers/kube-scheduler-amd64:v1.16.1
-docker rmi mirrorgooglecontainers/kube-proxy-amd64:v1.16.1
-docker rmi mirrorgooglecontainers/pause:3.1
-docker rmi mirrorgooglecontainers/etcd-amd64:3.3.15-0
-docker rmi coredns/coredns:1.6.2
-```
-
-> **如果确定了版本，可以直接使用下述脚本拉取镜像(这里使用阿里云服务器)**  
-> (默认执行拉取 master 所需镜像，参数 node 拉取 worker 所需镜像)
-> ```
+`使用以下脚本拉取镜像`
+> * 此脚本使用阿里云服务器
+> * 根据上述输出中版本号更新脚本中的版本号
+> * 直接执行拉取 master 所需镜像（master 中执行）
+> * 参数 node 拉取 node 所需镜像（node 中执行）
+>   * ./pull_images.sh node
+> 
+> ```sh
 > #!/bin/bash
 > 
-> ## 使用如下脚本下载国内镜像，并修改tag为google的tag
+> ## 使用如下脚本下载国内镜像，并修改 tag 为 k8s 的 tag
 > set -e
 > 
 > KUBE_VERSION=v1.16.1
@@ -279,29 +266,18 @@ docker rmi coredns/coredns:1.6.2
 > done
 > ```
 
-## step 5: 拉取 k8s 基本服务镜像（node）
-
-> 这一步和上一步类似，不过在 node 端只需要安装 kube-proxy, pause
-
-```
-docker pull mirrorgooglecontainers/kube-proxy-amd64:v1.16.1
-docker pull mirrorgooglecontainers/pause:3.1
-docker tag docker.io/mirrorgooglecontainers/kube-proxy-amd64:v1.16.1  k8s.gcr.io/kube-proxy:v1.16.1
-docker tag docker.io/mirrorgooglecontainers/pause:3.1                 k8s.gcr.io/pause:3.1
-docker rmi mirrorgooglecontainers/kube-proxy-amd64:v1.16.1
-docker rmi mirrorgooglecontainers/pause:3.1
-```
-
-## step 6: 创建集群
-
+## [step6:创建k8s集群](#目录)
+> **此步骤只需在 master 节点上执行**
 ```
 # 初始化Master（Master需要至少2核）此处会各种报错,异常...成功与否就在此
-# --apiserver-advertise-address  指定与其它节点通信的接口
-# --pod-network-cidr             指定pod网络子网，使用fannel网络必须使用这个CIDR
-kubeadm init --apiserver-advertise-address 192.168.200.25 --pod-network-cidr 10.244.0.0/16  --kubernetes-version 1.16.1
+kubeadm init --apiserver-advertise-address 192.168.200.25 --pod-network-cidr 10.244.0.0/16 --kubernetes-version 1.16.1
 ```
+* --apiserver-advertise-address  指定与其它节点通信的接口
+* --pod-network-cidr             指定 pod 网络子网，使用 fannel 网络必须使用这个CIDR
+* --kubernetes-version           指定K8S版本，这里必须与之前导入到Docker镜像版本一致，否则会访问谷歌去重新下载K8S最新版的Docker镜像
+
 运行初始化，程序会检验环境一致性，可以根据实际错误提示进一步修复问题。
-程序会访问https://dl.k8s.io/release/stable-1.txt获取最新的k8s版本，访问这个连接需要FQ，如果无法访问，则会使用kubeadm client的版本作为安装的版本号，使用kubeadm version查看client版本。也可以使用--kubernetes-version明确指定版本
+程序会访问https://dl.k8s.io/release/stable-1.txt获取最新的k8s版本，访问这个连接需要科学上网，如果无法访问，则会使用 kubeadm client 的版本作为安装的版本号，使用 kubeadm version 查看 client 版本。也可以使用 --kubernetes-version 明确指定版本
 ```
 [init] Using Kubernetes version: v1.16.1
 [preflight] Running pre-flight checks
@@ -374,26 +350,62 @@ kubeadm join 192.168.193.130:6443 --token 8tju9u.lctq826mmtpyltkc \
     --discovery-token-ca-cert-hash sha256:c0bb0601d3ee49278190653197999a7d42b076948a45e5a147ed300bd729726d
 ```
 
-`出现如上所示的输出则表明初始化成功，其中最后面说明了启动 cluster 所要做的其它必要操作，我们照做：`  
-`master`  
+出现如上所示的输出则表明初始化成功，其中最后面说明了完成 cluster 所要做的其它必要操作，主要有三步：
+* 设置配置文件权限
+* 为集群应用网络组件
+* 子节点加入集群（具体执行的命令已经给出，在子节点上操作）
+
+这里我们先做第一步即可：
 ```
 # 设置配置文件权限
 mkdir -p $HOME/.kube
 sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
 sudo chown $(id -u):$(id -g) $HOME/.kube/config
+```
 
-# 应用flannel网络
+## [step7:应用flannel网络](#目录)
+
+在上一步，kubeadm 已提示我们要为 集群 应用专门的网络，这里我们选择 flannel，
+如果可以科学上网，可以直接使用如下命令：
+```  
 kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
 ```
-## step 7: 设置集群
 
-`将Master作为工作节点（如有必要）`
-```
-kubectl taint nodes --all node-role.kubernetes.io/master-
-```
-> 利用该方法，我们可以不使用minikube而创建一个单节点的K8S集群
+如果不能科学上网，则需进行其它配置
 
-`子节点加入master`
+`下载 yml 文件：`
+```
+wget https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+```
+查看上述文件可知，flannel 使用的镜像为
+
+`下载镜像并设置tag`
+
+`应用flannel网络`
+```
+kubectl apply -f kube-flannel.yml
+```
+
+`验证服务`
+```
+```
+如果不出意外，所有的服务都应该正常运行，输出示例：
+
+
+## [step8:子节点加入集群](#目录)
+
+`拉取需要的镜像（node）`
+> 在 node 端只需要安装 kube-proxy, pause 这两个服务
+```
+docker pull mirrorgooglecontainers/kube-proxy-amd64:v1.16.1
+docker pull mirrorgooglecontainers/pause:3.1
+docker tag docker.io/mirrorgooglecontainers/kube-proxy-amd64:v1.16.1  k8s.gcr.io/kube-proxy:v1.16.1
+docker tag docker.io/mirrorgooglecontainers/pause:3.1                 k8s.gcr.io/pause:3.1
+docker rmi mirrorgooglecontainers/kube-proxy-amd64:v1.16.1
+docker rmi mirrorgooglecontainers/pause:3.1
+```
+
+`加入集群（node）`
 ```
 # 运行 master 端 初始化时的 node 节点 join 命令
 kubeadm join 192.168.193.130:6443 --token 8tju9u.lctq826mmtpyltkc \
@@ -418,6 +430,18 @@ kubeadm join 192.168.193.130:6443 --token 8tju9u.lctq826mmtpyltkc \
 > Run 'kubectl get nodes' on the control-plane to see this node join the cluster.
 > ```
 
-## step 7: 验证服务
+
+`验证服务（node）`
+
+`验证服务（master）`
+
+## [step9:配置集群](#目录)
+
+`将Master作为工作节点（如有必要）`
+```
+kubectl taint nodes --all node-role.kubernetes.io/master-
+```
+> 利用该方法，我们可以不使用 minikube 而创建一个单节点的K8S集群
+
 
 
