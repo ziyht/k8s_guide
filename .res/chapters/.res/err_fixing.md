@@ -87,13 +87,13 @@ pod/kube-scheduler-localhost.localdomain            1/1     Running             
 > 注意： 拉取镜像的操作在子节点上也要执行
 ```
 # 方案1: 直接拉取
-docker pull lizhenliang/flannel:v0.11.0-amd64
-docker tag lizhenliang/flannel:v0.11.0-amd64 quay.io/coreos/flannel:v0.11.0-amd64
+docker pull quay.azk8s.cn/coreos/flannel:v0.11.0-amd64
+docker tag quay.azk8s.cn/coreos/flannel:v0.11.0-amd64 quay.io/coreos/flannel:v0.11.0-amd64
 
 # 方案2：主服务器无法访问时，先下载，再导入
-docker image save lizhenliang/flannel:v0.11.0-amd64 >flannelv0.11.0-amd64.tar
+docker image save quay.azk8s.cn/coreos/flannel:v0.11.0-amd64 >flannelv0.11.0-amd64.tar
 docker load < flannelv0.11.0-amd64.tar
-docker tag lizhenliang/flannel:v0.11.0-amd64 quay.io/coreos/flannel:v0.11.0-amd64
+docker tag quay.azk8s.cn/coreos/flannel:v0.11.0-amd64 quay.io/coreos/flannel:v0.11.0-amd64
 ```
 
 然后重新应用 flannel 网络
