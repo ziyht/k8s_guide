@@ -28,11 +28,9 @@
 `更新 hosts 文件`
 ```sh
 cat <<EOF >>/etc/hosts
-
 192.168.193.110 master
 192.168.193.111 node1
 192.168.193.112 node2
-
 EOF
 ```
 
@@ -120,7 +118,7 @@ ssh-copy-id root@node2
 ```sh
 yum -y install epel-release
 yum clean all && yum makecache
-yum install -y python-pip python34 python-netaddr python34-pip ansible git
+yum install -y python-pip python36 python-netaddr python36-pip ansible git
 ```
 
 `从 git 上下载 kubespray`
