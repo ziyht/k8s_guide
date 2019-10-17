@@ -1,7 +1,5 @@
 #!/bin/sh
 
-
-
 yum install -y bridge-utils.x86_64
 modprobe  br_netfilter  # 加载 br_netfilter 模块，使用lsmod查看开启的模块
 
