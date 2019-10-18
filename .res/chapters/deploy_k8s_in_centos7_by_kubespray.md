@@ -2,25 +2,33 @@
 
 ## 目录
 
+### 部署
 * [step1:规划](#step1:规划)
 * [step2:配置节点](#step2:配置节点)
 * [step3:在master节点准备kubespray](#step3:在master节点准备kubespray)
 * [step4:配置集群](#step4:配置kubespray)
 * [step5:安装集群](#step5:安装集群)
-* [step6:后续操作](#step6:后续操作)
 
-## 前置要求
-
-节点数 : >= 2  
-节点核数 : >= 2
+### 维护
+* [扩容节点](#扩容节点)
+* [刪除节点](#删除节点)
+* [卸载](#卸载)
+* [升级](#升级)
 
 ## [step1:规划](#目录)
 
-|IP             | 角色              | Hostname| OS      |
-|--             | --                |--       |--       |
-|192.168.193.110| master,etcd       |master   | centos7 |
-|192.168.193.111| master,node,etcd  |node1    | centos7 |
-|192.168.193.112| node,etcd         |node2    | centos7 |
+> 节点核数 : >= 2
+
+|IP             | 角色                | Hostname| OS      |
+|--             | --                  | --      |--       |
+|192.168.193.110| master,etcd,ansible |master   | centos7 |
+|192.168.193.111| master,node,etcd    |node1    | centos7 |
+|192.168.193.112| node,etcd           |node2    | centos7 |
+
+master: k8s master 节点  
+node：k8s node 节点  
+etcd：etcd 服务节点  
+ansible：部署节点  
 
 ## [step2:配置节点](#目录)
 
@@ -91,6 +99,7 @@ CONFIG_FILE=inventory/mycluster/hosts.yml python3 contrib/inventory_builder/inve
 
 `编辑 hosts.yml(根据自己的需要修改配置)`
 ```yml
+# vim inventory/mycluster/group_vars/k8s-cluster/k8s-cluster.yml
 all:
   hosts:
     node1:
@@ -127,6 +136,21 @@ vim inventory/mycluster/group_vars/k8s-cluster/k8s-cluster.yml
 `配置附加组件（根据需要）`
 ```
 vim inventory/mycluster/group_vars/k8s-cluster/addons.yml
+```
+
+`配置 dashboard（可忽略）`
+```sh
+# vim ./roles/kubernetes-apps/ansible/templates/coredns-deployment.yml.j2
+# ------------------- Dashboard Service ------------------- #
+...
+...
+      targetPort: 8443
+
+  type: NodePort    //添加这一行   
+
+  selector:
+
+k8s-app: kubernetes-dashboard
 ```
 
 ## [step5:安装集群](#目录)
@@ -179,4 +203,66 @@ NAME    STATUS   ROLES    AGE    VERSION
 node1   Ready    master   119m   v1.15.3
 node2   Ready    master   117m   v1.15.3
 node3   Ready    <none>   117m   v1.15.3
+```
+
+`查看ipvs`
+```
+ipvsadm -L -n
+IP Virtual Server version 1.2.1 (size=4096)
+Prot LocalAddress:Port Scheduler Flags
+  -> RemoteAddress:Port           Forward Weight ActiveConn InActConn
+TCP  10.233.0.1:443 rr
+  -> 192.168.193.110:6443         Masq    1      1          0         
+  -> 192.168.193.111:6443         Masq    1      3          0         
+TCP  10.233.0.3:53 rr
+  -> 10.233.90.1:53               Masq    1      0          0         
+  -> 10.233.96.2:53               Masq    1      0          0         
+TCP  10.233.0.3:9153 rr
+  -> 10.233.90.1:9153             Masq    1      0          0         
+  -> 10.233.96.2:9153             Masq    1      0          0         
+TCP  10.233.11.128:443 rr
+  -> 10.233.90.3:8443             Masq    1      0          0         
+TCP  10.233.13.226:44134 rr
+  -> 10.233.96.1:44134            Masq    1      0          0         
+UDP  10.233.0.3:53 rr
+  -> 10.233.90.1:53               Masq    1      0          0         
+  -> 10.233.96.2:53               Masq    1      0          0
+```
+`登录 dashboard`
+```sh
+# 获取登录令牌
+kubectl -n kube-system describe $(kubectl -n kube-system get secret -n kube-system -o name | grep namespace) | grep token
+```
+然后使用如下地址登录（使用firefox浏览器）：
+https://192.168.193.110:6443/api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:/proxy/#!/login
+
+
+### [扩容节点](#目录)
+`修改配置文件`
+```
+vim inventory/mycluster/hosts.yml
+```
+
+`应用 scale.yml`
+```
+ansible-playbook -i inventory/mycluster/hosts.yml scale.yml -b -v -k
+```
+
+### [刪除节点](#目录)
+`应用 remove-node.yml`
+```sh
+# 这里不指定节点，将删除所有节点，类似卸载
+ansible-playbook -i inventory/mycluster/hosts.yml remove-node.yml -b -v
+```
+
+### [卸载](#目录)
+`应用 reset.yml`
+```
+ansible-playbook -i inventory/mycluster/hosts.yml reset.yml -b –vvv
+```
+
+### [升级](#目录)
+`应用 upgrade-cluster.yml`
+```
+ansible-playbook upgrade-cluster.yml -b -i inventory/mycluster/hosts.yml -e kube_version=vX.XX.XX -vvv
 ```
