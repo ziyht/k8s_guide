@@ -15,6 +15,6 @@
 [kubespray](https://github.com/kubernetes-sigs/kubespray)
 
 ### 实践
-* [使用kubeadmin在centos7上部署k8s集群](./.res/chapters/deploy_k8s_in_centos7_by_kubeadmin.md)
-* [使用kubespray在centos7上部署k8s集群](./.res/chapters/deploy_k8s_in_centos7_by_kubespray.md)
-* [部署 k8s Dashboard](./.res/chapters/deploy_dashboard_for_k8s.md)
+* [使用 kubeadmin 在 centos7 上部署k8s集群](./.res/chapters/deploy_k8s_in_centos7_by_kubeadmin.md)
+* [使用 kubespray 在 centos7 上部署k8s集群](./.res/chapters/deploy_k8s_in_centos7_by_kubespray.md)
+* [部署一个 Nginx 应用](./.res/chapters/deploy_nginx_in_k8s.md)
