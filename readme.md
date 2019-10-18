@@ -8,7 +8,7 @@
 ### 参考文档
 |文档|内容|
 |--|--|
-|[Kubernetes中文手册](https://www.kubernetes.org.cn/docs)|详细介绍，架构，概念，部署|
+|[Kubernetes官方文档](https://k8smeetup.github.io/docs/home/)||
 |[Kubernetes指南](https://feisky.gitbooks.io/kubernetes/)|详细介绍，架构，概念，部署|
 
 ### 相关项目
