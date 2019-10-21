@@ -39,3 +39,4 @@ sed -i "s/gcr\.azk8s\.cn\/k8s-dns-node-cache/gcr\.azk8s\.cn\/google-containers\/
 sed -i "s/gcr\.azk8s\.cn\/cluster-proportional-autoscaler/gcr\.azk8s\.cn\/google-containers\/cluster-proportional-autoscaler/g" /opt/kubespray/roles/download/defaults/main.yml
 sed -i "s/k8s\.gcr\.io/gcr\.azk8s\.cn/g"   /opt/kubespray/inventory/sample/group_vars/k8s-cluster/k8s-cluster.yml
 sed -i "s/gcr\.io/gcr\.azk8s\.cn/g"        /opt/kubespray/inventory/sample/group_vars/k8s-cluster/k8s-cluster.yml
+sed -i "s/gcr\.azk8s\.cn\/addon-resizer/gcr\.azk8s\.cn\/google-containers\/addon-resizer/g" /opt/kubespray/roles/download/defaults/
