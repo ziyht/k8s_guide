@@ -17,14 +17,15 @@ wget -O /etc/yum.repos.d/epel.repo http://mirrors.aliyun.com/repo/epel-7.repo
 
 # 安装前置依赖
 yum install -y epel-release ansible git gcc openssl-devel
-yum install -y python36 python36-devel python36-pip python-netaddr
+yum install -y python36 python36-devel python-netaddr
+yum install -y python36-pip
 
 # 获取 kubespray
 git clone https://github.com/kubernetes-incubator/kubespray.git /opt/kubespray
 
 # 安装依赖
-pip3.6 install -r /opt/kubespray/requirements.txt
-pip3.6 install -r /opt/kubespray/contrib/inventory_builder/test-requirements.txt
+pip3 install -r /opt/kubespray/requirements.txt
+pip3 install -r /opt/kubespray/contrib/inventory_builder/test-requirements.txt
 pip3.6 install ruamel.yaml
 
 cd /opt/kubespray/
