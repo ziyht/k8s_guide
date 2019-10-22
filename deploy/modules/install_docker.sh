@@ -19,11 +19,8 @@ systemctl enable --now docker
 # 修改docker cgroup驱动：native.cgroupdriver=systemd
 cat > /etc/docker/daemon.json <<EOF 
 {
-  "exec-opts": ["native.cgroupdriver=systemd"],
+  "exec-opts": ["native.cgroupdriver=cgroupfs"],
   "log-driver": "json-file",
-  "log-opts": {
-    "max-size": "100m"
-  },
   "storage-driver": "overlay2",
   "storage-opts": [
     "overlay2.override_kernel_check=true"
@@ -31,8 +28,6 @@ cat > /etc/docker/daemon.json <<EOF
 }
 EOF
 
-mkdir -p /etc/systemd/system/docker.service.d
-
 # Restart Docker
 systemctl daemon-reload
-systemctl restart docke
+systemctl restart docker
