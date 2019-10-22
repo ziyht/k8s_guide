@@ -64,5 +64,6 @@ exec_step disable_firewalld
 exec_step disable_selinux
 exec_step disable_swap
 exec_step set_iptables
+exec_step install_docker.sh
 
 echo '==[prepare for nodes ok]===================================================='
