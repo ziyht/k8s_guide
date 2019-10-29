@@ -4,7 +4,6 @@
 * [参考文档](#参考文档)
 * [实践](#实践)
 
-
 ### 参考文档
 |文档|内容|
 |--|--|
@@ -18,3 +17,7 @@
 * [部署高可用 k8s 集群](./.res/chapters/deploy_k8s_in_centos7_by_kubespray.md)
 * [部署一个 Nginx 应用](./.res/chapters/deploy_nginx_in_k8s.md)
 * [部署 kubeapp ](./.res/chapters/deploy_kubeapp_in_k8s.md)
+* [创建 pv 和 pvc ]()
+
+### 附
+* [构建docker image](./.res/chapters/docker_create_image.md)  
