@@ -1,10 +1,11 @@
 # 在 k8s 上部署 kubeapp
 
 ## kubeapp 简介
+kubeapp 是 一个基于 helm 的带 UI 的 k8s 应用管理器，你可以认为它就是 helm 的UI版。通过它，我们可以通过 UI 界面交互式的部署应用，删除应用，升级应用等等。
 
 ## 前置要求
 
-需要先在 k8s 中部署 helm，在使用 kubespray 部署 k8s 时 可以 通过修改 inventory/$name/group_vars/k8s-cluster/addons.yml 中的插件开关进行部署。
+需要先在 k8s 中部署 helm，在使用 kubespray 部署 k8s 时 可以 通过修改 inventory/$name/group_vars/k8s-cluster/addons.yml 中的插件开关进行部署helm。
 ```yml
 # Helm deployment
 helm_enabled: true
