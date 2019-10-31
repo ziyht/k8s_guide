@@ -5,29 +5,29 @@ apiVersion: apps/v1
 #对象类型
 kind: Deployment
 metadata:
-  name: nginx-deployment  #deployment名字
+  name: nginx-deployment    # deployment名字
   labels:
-    app: nginx   #deployment标签，可以自由定义
+    app: nginx                  # deployment标签，可以自由定义
 spec:
-  replicas: 3   #pod 副本数量
-  selector:     #pod选择器定义，主要用于定义根据什么标签搜索需要管理的pod
+  replicas: 3           # pod 副本数量
+  selector:             # pod 选择器定义，主要用于定义根据什么标签搜索需要管理的pod
     matchLabels:
-      app: nginx  #pod标签
-  template:  #pod模版定义
+      app: nginx        # pod标签
+  template:          # pod模版定义
     metadata:
-      labels:   #pod 标签定义
+      labels:           # pod 标签定义
         app: nginx
     spec: 
-      containers: #容器数组定义
-      - name: nginx  #容器名
-        image: nginx:1.7.9  #镜像地址
-        command: #容器启动命令，【可选】
+      containers:       # 容器数组定义
+      - name: nginx         # 容器名
+        image: nginx:1.7.9  # 镜像地址
+        command:            # 容器启动命令，【可选】
             - /alidata/www/scripts/start.sh
-        ports:  #定义容器需要暴露的端口
+        ports:              # 定义容器需要暴露的端口
             - containerPort: 80
-        env: #环境变量定义【可选】
-            - name: CONSOLE_URL #变量名
-              value: https://www.xxx.com #变量值
+        env:                # 环境变量定义【可选】
+            - name: CONSOLE_URL             # 变量名
+              value: https://www.xxx.com    # 变量值
 ```
 
 ## Service
